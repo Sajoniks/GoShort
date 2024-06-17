@@ -10,7 +10,12 @@ import (
 )
 
 type AppConfig struct {
-	Server ServerConfig `yaml:"server"`
+	Server   ServerConfig `yaml:"server"`
+	Database DbConfig     `yaml:"database"`
+}
+
+type DbConfig struct {
+	ConnectionString string `yaml:"connection-string"`
 }
 
 type ServerConfig struct {

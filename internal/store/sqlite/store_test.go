@@ -37,6 +37,30 @@ func TestMain(m *testing.M) {
 	os.Exit(retCode)
 }
 
+func Test_AddEmptyUrl(t *testing.T) {
+	_, err := store.SaveURL("", "aaa")
+	if err == nil {
+		t.Errorf("wanted an error")
+	}
+
+	_, err = store.SaveURL("   ", "aaa")
+	if err == nil {
+		t.Errorf("wanted an error")
+	}
+}
+
+func Test_AddEmptyAlias(t *testing.T) {
+	_, err := store.SaveURL("www.example.com", "")
+	if err == nil {
+		t.Errorf("wanted an error")
+	}
+
+	_, err = store.SaveURL("www.example.com", "   ")
+	if err == nil {
+		t.Errorf("wanted an error")
+	}
+}
+
 func Test_AddUrl(t *testing.T) {
 	_, err := store.SaveURL("www.example.com", "aaa")
 	if err != nil {

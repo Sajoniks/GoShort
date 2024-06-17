@@ -7,6 +7,8 @@ import (
 var (
 	ErrUrlNotFound = errors.New("url does not exist")
 	ErrUrlExists   = errors.New("url already exists")
+	ErrAliasEmpty  = errors.New("alias is empty")
+	ErrUrlEmpty    = errors.New("url is empty")
 )
 
 type Closeable interface {
@@ -14,7 +16,7 @@ type Closeable interface {
 }
 
 type Store interface {
-	SaveURL(src string, alias string) (string, error)
+	SaveURL(src, alias string) (string, error)
 	GetURL(alias string) (string, error)
 }
 

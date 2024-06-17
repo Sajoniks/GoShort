@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/mattn/go-sqlite3"
 	_ "github.com/mattn/go-sqlite3"
-	urlstore "github.com/sajoniks/GoShort/internal/store/interface"
+	"github.com/sajoniks/GoShort/internal/store/interface"
 	"github.com/sajoniks/GoShort/internal/trace"
 )
 
@@ -29,6 +29,7 @@ func NewSqliteStore(connString string) (urlstore.CloseableStore, error) {
     		id INTEGER PRIMARY KEY AUTOINCREMENT,
     		alias TEXT NOT NULL,
     		url TEXT NOT NULL,
+    		CHECK(trim(alias, ' ') <> '' AND trim(url, ' ') <> ''),
     		UNIQUE (alias, url));
 		CREATE INDEX IF NOT EXISTS idx_alias ON urls(alias);
 	`)
@@ -42,23 +43,6 @@ func NewSqliteStore(connString string) (urlstore.CloseableStore, error) {
 	}
 
 	return &sqliteUrlStore{db: db}, nil
-}
-
-func (s *sqliteUrlStore) SaveURL(src string, alias string) (string, error) {
-	stmt, err := s.db.Prepare(`INSERT INTO urls (alias, url) VALUES (?, ?)`)
-	if err != nil {
-		return "", trace.WrapError(err)
-	}
-	res, err := stmt.Exec(alias, src)
-	if err != nil {
-		var sqliteErr sqlite3.Error
-		if errors.As(err, &sqliteErr) && errors.Is(sqliteErr.ExtendedCode, sqlite3.ErrConstraintUnique) {
-			return "", trace.WrapError(urlstore.ErrUrlExists)
-		}
-		return "", trace.WrapError(err)
-	}
-
-	return fmt.Sprint(res.LastInsertId()), nil
 }
 
 func (s *sqliteUrlStore) GetURL(alias string) (string, error) {
@@ -76,4 +60,30 @@ func (s *sqliteUrlStore) GetURL(alias string) (string, error) {
 	}
 
 	return resultUrl, nil
+}
+
+func (s *sqliteUrlStore) SaveURL(src, alias string) (string, error) {
+	if len(alias) == 0 {
+		return "", trace.WrapError(urlstore.ErrAliasEmpty)
+	}
+	if len(src) == 0 {
+		return "", trace.WrapError(urlstore.ErrUrlEmpty)
+	}
+	stmt, err := s.db.Prepare(`INSERT INTO urls (alias, url) VALUES (?, ?)`)
+	if err != nil {
+		return "", trace.WrapError(err)
+	}
+	res, err := stmt.Exec(alias, src)
+	if err != nil {
+		var sqliteErr sqlite3.Error
+		if errors.As(err, &sqliteErr) && errors.Is(sqliteErr.ExtendedCode, sqlite3.ErrConstraintUnique) {
+			return "", trace.WrapError(urlstore.ErrUrlExists)
+		}
+		if errors.As(err, &sqliteErr) && errors.Is(sqliteErr.ExtendedCode, sqlite3.ErrConstraintCheck) {
+			return "", trace.WrapError(urlstore.ErrUrlExists)
+		}
+		return "", trace.WrapError(err)
+	}
+
+	return fmt.Sprint(res.LastInsertId()), nil
 }

@@ -20,11 +20,11 @@ import (
 	"time"
 )
 
-type request struct {
+type RequestSave struct {
 	URL string `json:"url"`
 }
 
-type response struct {
+type ResponseSave struct {
 	resp.BaseResponse
 	Alias string `json:"alias,omitempty"`
 }
@@ -57,7 +57,7 @@ func NewSaveUrlHandler(store urlstore.Store) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log := middleware.GetLogging(r.Context())
 
-		var reqBody request
+		var reqBody RequestSave
 
 		if err := helper.DecodeJson(r.Body, &reqBody); err != nil {
 			log.Error("error on decode json", zap.Error(trace.WrapError(err)))
@@ -66,18 +66,18 @@ func NewSaveUrlHandler(store urlstore.Store) http.HandlerFunc {
 
 			if errors.Is(err, io.EOF) {
 				w.WriteHeader(http.StatusInternalServerError)
-				_ = helper.WriteProblemJson(w, &response{
+				_ = helper.WriteProblemJson(w, &ResponseSave{
 					BaseResponse: resp.ErrorMsg("empty request body"),
 				})
 			} else {
-				_ = helper.WriteProblemJson(w, &response{
+				_ = helper.WriteProblemJson(w, &ResponseSave{
 					BaseResponse: resp.ErrorMsg("error decoding request content"),
 				})
 			}
 			return
 		}
 
-		var reqResp response
+		var reqResp ResponseSave
 		if reqBody.URL == "" {
 			reqResp.BaseResponse = resp.ErrorMsg("url is required")
 			log.Error("validation error", zap.String("error", reqResp.Error))

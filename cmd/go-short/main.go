@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"github.com/gorilla/mux"
 	"github.com/sajoniks/GoShort/internal/config"
 	"github.com/sajoniks/GoShort/internal/http-server/handlers/get"
@@ -8,7 +9,11 @@ import (
 	"github.com/sajoniks/GoShort/internal/http-server/middleware"
 	"github.com/sajoniks/GoShort/internal/store/sqlite"
 	"go.uber.org/zap"
+	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"time"
 )
 
 func configureLogger(env string, cfg *config.AppConfig) (*zap.Logger, error) {
@@ -49,5 +54,26 @@ func main() {
 	r.Methods("POST").Path("/").Handler(save.NewSaveUrlHandler(store))
 	r.Methods("GET").Path("/{alias}").Handler(get.NewGetUrlHandler(store))
 
-	http.ListenAndServe(cfg.Server.Host, r)
+	serv := &http.Server{
+		Addr:    cfg.Server.Host,
+		Handler: r,
+	}
+
+	go func() {
+		if hostErr := serv.ListenAndServe(); hostErr != nil {
+			log.Fatalf("error listening: %v", hostErr)
+		}
+	}()
+
+	c := make(chan os.Signal)
+	signal.Notify(c, os.Interrupt)
+	<-c
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	serv.Shutdown(ctx)
+	logger.Info("Shut down")
+
+	os.Exit(0)
 }

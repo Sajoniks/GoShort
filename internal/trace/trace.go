@@ -1,7 +1,6 @@
 package trace
 
 import (
-	"errors"
 	"fmt"
 	"runtime"
 )
@@ -14,7 +13,12 @@ func trace() (file string, function string, line int) {
 	return frame.File, frame.Function, frame.Line
 }
 
+func WrapMsg(str string) string {
+	_, function, line := trace()
+	return fmt.Sprintf("%s:%d: %s", function, line, str)
+}
+
 func WrapError(err error) error {
 	_, function, line := trace()
-	return errors.Join(err, fmt.Errorf("%s:%d", function, line))
+	return fmt.Errorf("%s:%d %w", function, line, err)
 }

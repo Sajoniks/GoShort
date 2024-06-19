@@ -79,7 +79,7 @@ func TestSaveHandler(t *testing.T) {
 		{
 			name:    "fail for empty url",
 			url:     "",
-			respErr: "url is required",
+			respErr: "invalid url",
 		},
 		{
 			name:    "fail for blank",

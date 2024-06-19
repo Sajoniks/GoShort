@@ -12,15 +12,17 @@ const (
 	host string = "localhost:8080"
 )
 
-func getDefaultClient(t *testing.T, url url.URL) *httpexpect.Expect {
-	return httpexpect.Default(t, url.String())
+func getDefaultClient(t *testing.T) *httpexpect.Expect {
+	u := url.URL{Scheme: "http", Host: host}
+	return httpexpect.Default(t, u.String())
 }
 
-func getNonRedirectClient(t *testing.T, url url.URL) *httpexpect.Expect {
+func getNonRedirectClient(t *testing.T) *httpexpect.Expect {
+	u := url.URL{Scheme: "http", Host: host}
 	return httpexpect.WithConfig(
 		httpexpect.Config{
 			TestName: t.Name(),
-			BaseURL:  url.String(),
+			BaseURL:  u.String(),
 			Reporter: httpexpect.NewAssertReporter(t),
 			Printers: []httpexpect.Printer{httpexpect.NewCompactPrinter(t)},
 			Client: &http.Client{
@@ -33,25 +35,65 @@ func getNonRedirectClient(t *testing.T, url url.URL) *httpexpect.Expect {
 }
 
 func TestUrlShortener_SuccessPost(t *testing.T) {
-	u := url.URL{Scheme: "http", Host: host}
-	e := getDefaultClient(t, u)
+	e := getDefaultClient(t)
 
 	resp := e.POST("/").
 		WithJSON(save.RequestSave{
 			URL: "https://www.example.com",
 		}).
-		Expect()
+		Expect().
+		Status(http.StatusOK)
 
-	obj := resp.Status(http.StatusOK).
-		HasContentType("application/json").
-		JSON().Object()
+	obj := resp.JSON().Object()
 
 	obj.ContainsKey("alias").Value("alias").IsString().NotEqual("")
 }
 
+func TestUrlShortener_EmptyData_FailPost(t *testing.T) {
+	e := getDefaultClient(t)
+
+	resp := e.POST("/").Expect().Status(http.StatusOK)
+
+	obj := resp.JSON(httpexpect.ContentOpts{MediaType: "application/problem+json"}).Object()
+
+	obj.HasValue("ok", false)
+	obj.HasValue("description", "empty request body")
+}
+
+func TestUrlShortener_EmptyUrl_FailPost(t *testing.T) {
+	e := getDefaultClient(t)
+
+	resp := e.POST("/").
+		WithJSON(save.RequestSave{
+			URL: " ",
+		}).
+		Expect().
+		Status(http.StatusOK)
+
+	obj := resp.JSON(httpexpect.ContentOpts{
+		MediaType: "application/problem+json",
+	}).Object()
+
+	obj.HasValue("ok", false)
+	obj.HasValue("description", "invalid url")
+
+	resp = e.POST("/").
+		WithJSON(save.RequestSave{
+			URL: "",
+		}).
+		Expect().
+		Status(http.StatusOK)
+
+	obj = resp.JSON(httpexpect.ContentOpts{
+		MediaType: "application/problem+json",
+	}).Object()
+
+	obj.HasValue("ok", false)
+	obj.HasValue("description", "invalid url")
+}
+
 func TestUrlShortener_Redirects(t *testing.T) {
-	u := url.URL{Scheme: "http", Host: host}
-	e := getNonRedirectClient(t, u)
+	e := getNonRedirectClient(t)
 
 	var alias string
 

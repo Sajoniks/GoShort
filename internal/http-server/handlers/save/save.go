@@ -62,14 +62,12 @@ func NewSaveUrlHandler(store urlstore.Store) http.HandlerFunc {
 		if err := helper.DecodeJson(r.Body, &reqBody); err != nil {
 			log.Error("error on decode json", zap.Error(trace.WrapError(err)))
 
-			w.WriteHeader(http.StatusInternalServerError)
-
 			if errors.Is(err, io.EOF) {
-				w.WriteHeader(http.StatusInternalServerError)
 				_ = helper.WriteProblemJson(w, &ResponseSave{
 					BaseResponse: resp.ErrorMsg("empty request body"),
 				})
 			} else {
+				w.WriteHeader(http.StatusInternalServerError)
 				_ = helper.WriteProblemJson(w, &ResponseSave{
 					BaseResponse: resp.ErrorMsg("error decoding request content"),
 				})
@@ -79,7 +77,7 @@ func NewSaveUrlHandler(store urlstore.Store) http.HandlerFunc {
 
 		var reqResp ResponseSave
 		if reqBody.URL == "" {
-			reqResp.BaseResponse = resp.ErrorMsg("url is required")
+			reqResp.BaseResponse = resp.ErrorMsg("invalid url")
 			log.Error("validation error", zap.String("error", reqResp.Error))
 
 			_ = helper.WriteProblemJson(w, &reqResp)

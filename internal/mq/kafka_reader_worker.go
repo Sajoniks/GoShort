@@ -22,6 +22,15 @@ type KafkaReaderWorker struct {
 	wg     sync.WaitGroup
 }
 
+// NewKafkaReaderWorker creates a new instance of KafkaReaderWorker that asynchronously reads messages
+// from Kafka. This worker uses "at most once" message processing - this means that message is auto-commited on receive.
+//
+// # Provided logger is wrapped with namespace, so there is no need to provide already wrapped logger
+//
+// KafkaReaderWorker spawns a goroutine that reads messages from the Kafka.
+// When message is received without errors, it is sent to KafkaReaderWorker.C channel
+//
+// Sending is asynchronous and uses task.Pool, so there can be simultaneous message processing.
 func NewKafkaReaderWorker(config *config.KafkaReaderConfig, logger *zap.Logger) *KafkaReaderWorker {
 	r := kafka.NewReader(kafka.ReaderConfig{
 		Brokers:  config.Brokers,

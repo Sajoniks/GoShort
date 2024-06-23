@@ -17,6 +17,13 @@ type KafkaWriterWorker struct {
 	pool   *task.Pool
 }
 
+// NewKafkaWriterWorker Creates a new KafkaWriterWorker instance
+//
+// Provided logger is wrapped with namespace, so
+// there is no need to pass already wrapped logger
+//
+// Worker utilizes task.Pool
+// asynchronously sending messages to the queue
 func NewKafkaWriterWorker(config *config.KafkaWriterConfig, logger *zap.Logger) *KafkaWriterWorker {
 	w := &kafka.Writer{
 		Addr:  kafka.TCP(config.Brokers...),

@@ -7,6 +7,7 @@ import (
 	"github.com/sajoniks/GoShort/internal/http-server/handlers/get"
 	"github.com/sajoniks/GoShort/internal/http-server/handlers/save"
 	"github.com/sajoniks/GoShort/internal/http-server/middleware"
+	"github.com/sajoniks/GoShort/internal/mq"
 	"github.com/sajoniks/GoShort/internal/store/sqlite"
 	"go.uber.org/zap"
 	"log"
@@ -44,15 +45,17 @@ func main() {
 		logger.Panic("unable to load database", zap.Error(err))
 	}
 
+	kafka := mq.NewKafkaWriterWorker(&cfg.Messaging.Kafka.Writers[0], logger)
+
 	r := mux.NewRouter()
 	r.Use(
-		middleware.NewRequestId(),
 		middleware.NewLogging(logger),
+		middleware.NewRequestId(),
 		middleware.NewRecoverer(),
 	)
 
-	r.Methods("POST").Path("/").Handler(save.NewSaveUrlHandler(store))
-	r.Methods("GET").Path("/{alias}").Handler(get.NewGetUrlHandler(store))
+	r.Methods("POST").Path("/").Handler(save.NewSaveUrlHandler(store, kafka))
+	r.Methods("GET").Path("/{alias}").Handler(get.NewGetUrlHandler(store, kafka))
 
 	serv := &http.Server{
 		Addr:    cfg.Server.Host,

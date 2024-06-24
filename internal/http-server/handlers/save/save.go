@@ -89,6 +89,10 @@ func NewSaveUrlHandler(store urlstore.Store, kafka *mq.KafkaWriterWorker) http.H
 			return
 		}
 
+		log = log.With(
+			zap.String("source_url", reqBody.URL),
+		)
+
 		var reqResp ResponseSave
 		if reqBody.URL == "" {
 			reqResp.BaseResponse = resp.ErrorMsg("invalid url")
@@ -107,6 +111,9 @@ func NewSaveUrlHandler(store urlstore.Store, kafka *mq.KafkaWriterWorker) http.H
 		}
 
 		alias := generateAlias(reqBody.URL)
+
+		log = log.With(zap.String("alias", alias))
+
 		id, err := store.SaveURL(reqBody.URL, alias)
 		if err != nil {
 			log.Error("save url error", zap.Error(trace.WrapError(err)))

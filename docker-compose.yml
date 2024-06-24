@@ -1,11 +1,38 @@
 services:
+  goshort:
+    image: goshort
+    build:
+      context: .
+      dockerfile: ./docker/goshort.Dockerfile
+    container_name: goshort
+    environment:
+      GOSHRT_CONFIG_PATH: /etc/goshort
+      GOSHRT_CONFIG_NAME: config.dev
+    ports:
+      - 8080:8080
+    volumes:
+      - ./config:/etc/goshort
+
+  goshort-analytics:
+    image: goshort-analytics
+    hostname: goshort-analytics
+    build:
+      context: .
+      dockerfile: ./docker/goshort-analytics.Dockerfile
+    container_name: goshort-analytics
+    environment:
+      GOSHRT_CONFIG_PATH: /etc/goshort-analytics
+      GOSHRT_CONFIG_NAME: analytics.dev
+    volumes:
+      - ./config:/etc/goshort-analytics
+
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
     hostname: zoo
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
-    ports:
-      - 2181:2181
+#    ports:
+#      - 2181:2181
 
   kafka:
     image: confluentinc/cp-kafka:latest
@@ -20,10 +47,10 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_ZOOKEEPER_CONNECT: zoo:2181
-      KAFKA_JMX_PORT: 19192
-      KAFKA_JMX_HOSTNAME: kafka
-    ports:
-      - 29092:29092
+#      KAFKA_JMX_PORT: 19192
+#      KAFKA_JMX_HOSTNAME: kafka
+#    ports:
+#      - 29092:29092
 
 #  kafka-ui:
 #    container_name: kafka-ui
@@ -51,3 +78,10 @@ services:
       echo -e 'Init done'
       kafka-topics --bootstrap-server kafka:19092 --list
       "
+
+  prometheus:
+    image: prom/prometheus
+    ports:
+      - 9090:9090
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml

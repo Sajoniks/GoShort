@@ -26,6 +26,8 @@ func NewGetUrlHandler(store urlstore.Store, kafka *mq.KafkaWriterWorker) http.Ha
 			return
 		}
 
+		log = log.With(zap.String("alias", alias))
+
 		var resp response.BaseResponse
 		url, err := store.GetURL(alias)
 		if err != nil {
@@ -40,9 +42,11 @@ func NewGetUrlHandler(store urlstore.Store, kafka *mq.KafkaWriterWorker) http.Ha
 			return
 		}
 
+		log = log.With(zap.String("url", url))
+
 		kafka.AddJsonMessage(urls.NewAccessedEvent(url, alias))
 
-		log.Info("access url", zap.String("url", url), zap.String("alias", alias))
+		log.Info("access url")
 		http.Redirect(w, r, url, http.StatusFound)
 	})
 }

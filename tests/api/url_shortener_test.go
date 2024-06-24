@@ -1,4 +1,4 @@
-package tests
+package api
 
 import (
 	"github.com/gavv/httpexpect/v2"

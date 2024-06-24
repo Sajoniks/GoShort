@@ -8,10 +8,12 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/sajoniks/GoShort/internal/store/interface"
 	"github.com/sajoniks/GoShort/internal/trace"
+	"sync"
 )
 
 type sqliteUrlStore struct {
 	db *sql.DB
+	mx sync.RWMutex
 }
 
 func (s *sqliteUrlStore) Close() {
@@ -46,6 +48,10 @@ func NewSqliteStore(connString string) (urlstore.CloseableStore, error) {
 }
 
 func (s *sqliteUrlStore) GetURL(alias string) (string, error) {
+
+	s.mx.RLock()
+	defer s.mx.RUnlock()
+
 	stmt, err := s.db.Prepare(`SELECT url FROM urls WHERE alias = ?`)
 	if err != nil {
 		return "", trace.WrapError(err)
@@ -63,6 +69,10 @@ func (s *sqliteUrlStore) GetURL(alias string) (string, error) {
 }
 
 func (s *sqliteUrlStore) SaveURL(src, alias string) (string, error) {
+
+	s.mx.Lock()
+	defer s.mx.Unlock()
+
 	if len(alias) == 0 {
 		return "", trace.WrapError(urlstore.ErrAliasEmpty)
 	}

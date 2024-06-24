@@ -49,8 +49,8 @@ func main() {
 
 	r := mux.NewRouter()
 	r.Use(
-		middleware.NewLogging(logger),
 		middleware.NewRequestId(),
+		middleware.NewLogging(logger),
 		middleware.NewRecoverer(),
 	)
 

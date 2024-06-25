@@ -1,0 +1,19 @@
+server:
+  host: "goshort:8080"
+
+metrics:
+  host: "goshort:8081"
+  path: "/metrics"
+
+cache:
+  host: "http://cache:8090"
+
+database:
+  connection-string: "urls.sqlite"
+
+mq:
+  kafka:
+    writers:
+      - topic: "url.events"
+        brokers:
+          - "kafka:19092"

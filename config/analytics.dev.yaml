@@ -1,0 +1,11 @@
+server:
+  host: ":8082"
+
+mq:
+  kafka:
+    readers:
+      - topic: "url.events"
+        brokers:
+          - "kafka:19092"
+        group-id: "url-analytics"
+        max-bytes: 10e6 # 10 mb

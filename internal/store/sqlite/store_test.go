@@ -26,7 +26,7 @@ func cleanupDb() {
 
 func TestMain(m *testing.M) {
 	var err error
-	store, err = NewSqliteStore("testdb.sqlite")
+	store, err = NewSqliteStore("testdb.sqlite", NewNoOpMetrics())
 	if err != nil {
 		log.Fatalf("failed to prepare db: %v", err)
 	}

@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/sajoniks/GoShort/internal/http-server/middleware"
+	"github.com/sajoniks/GoShort/internal/mq"
 	"github.com/sajoniks/GoShort/internal/store/interface"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
@@ -123,7 +124,7 @@ func TestSaveHandler(t *testing.T) {
 
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
-			handler := NewSaveUrlHandler(store)
+			handler := NewSaveUrlHandler("", store, mq.NewWriterNoOp())
 			b := &bytes.Buffer{}
 			fmt.Fprintf(b, `{"url": "%s"}`, tc.url)
 

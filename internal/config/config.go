@@ -10,9 +10,15 @@ import (
 )
 
 type AppConfig struct {
-	Server    ServerConfig    `yaml:"server"`
-	Database  DbConfig        `yaml:"database"`
-	Messaging MessagingConfig `yaml:"mq,omitempty"`
+	Server    ServerConfig        `yaml:"server"`
+	Database  DbConfig            `yaml:"database"`
+	Messaging MessagingConfig     `yaml:"mq,omitempty"`
+	Metrics   MetricsServerConfig `yaml:"metrics,omitempty"`
+}
+
+type MetricsServerConfig struct {
+	Host string `yaml:"host"`
+	Path string `yaml:"path"`
 }
 
 type DbConfig struct {

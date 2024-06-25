@@ -30,7 +30,7 @@ func NewLogging(logger *zap.Logger) mux.MiddlewareFunc {
 				zap.String("request_content_type", r.Header.Get("Content-Type")))
 
 			r = r.WithContext(context.WithValue(r.Context(), LoggerCtxKey, child))
-			spy := helper.ResponseWriterSpy{ResponseWriter: w}
+			spy := helper.SpyResponse(w)
 
 			t1 := time.Now()
 			defer func() {
@@ -41,7 +41,7 @@ func NewLogging(logger *zap.Logger) mux.MiddlewareFunc {
 					zap.String("time_taken", time.Since(t1).String()))
 			}()
 
-			next.ServeHTTP(&spy, r)
+			next.ServeHTTP(spy, r)
 		}
 
 		return http.HandlerFunc(handler)

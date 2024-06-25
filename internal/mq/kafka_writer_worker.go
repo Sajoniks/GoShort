@@ -11,6 +11,19 @@ import (
 	"go.uber.org/zap"
 )
 
+type KafkaWriterWorkerInterface interface {
+	AddJsonMessage(m any)
+}
+
+type writerNoOp struct{}
+
+func (k writerNoOp) AddJsonMessage(any) {
+}
+
+func NewWriterNoOp() KafkaWriterWorkerInterface {
+	return &writerNoOp{}
+}
+
 type KafkaWriterWorker struct {
 	writer *kafka.Writer
 	logger *zap.Logger

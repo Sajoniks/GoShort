@@ -17,6 +17,7 @@ import (
 	"go.uber.org/zap"
 	"io"
 	"net/http"
+	"path"
 	"regexp"
 	"sync"
 	"time"
@@ -64,7 +65,11 @@ type ResponseSave struct {
 	Alias string `json:"alias,omitempty"`
 }
 
-func NewSaveUrlHandler(store urlstore.Store, kafka *mq.KafkaWriterWorker) http.HandlerFunc {
+func NewSaveUrlHandler(
+	baseHost string,
+	store urlstore.Store,
+	kafka mq.KafkaWriterWorkerInterface,
+) http.HandlerFunc {
 	urlRegex :=
 		regexp.MustCompile("^(http:\\/\\/www\\.|https:\\/\\/www\\.|http:\\/\\/|https:\\/\\/|\\/|\\/\\/){1}[A-z0-9_-]*?[:]?[A-z0-9_-]*?[@]?[A-z0-9]+([\\-\\.]{1}[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?(\\/.*)?$")
 
@@ -139,7 +144,7 @@ func NewSaveUrlHandler(store urlstore.Store, kafka *mq.KafkaWriterWorker) http.H
 		kafka.AddJsonMessage(urls.NewAddedEvent(reqBody.URL, reqResp.Alias))
 
 		reqResp.BaseResponse = resp.Ok()
-		reqResp.Alias = alias
+		reqResp.Alias = path.Join(baseHost, alias)
 
 		_ = helper.WriteJson(w, &reqResp)
 	})

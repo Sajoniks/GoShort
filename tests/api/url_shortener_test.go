@@ -104,7 +104,7 @@ func TestUrlShortener_Redirects(t *testing.T) {
 		Expect().
 		JSON().Object().Value("alias").Decode(&alias)
 
-	e.GET("/{0}", alias).
+	e.GET(alias).
 		Expect().
 		Status(http.StatusFound).
 		Header("Location").IsEqual("https://www.example.com")

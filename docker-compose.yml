@@ -4,7 +4,7 @@ services:
     build:
       context: .
       dockerfile: ./docker/goshort.Dockerfile
-    container_name: goshort
+    hostname: goshort
     environment:
       GOSHRT_CONFIG_PATH: /etc/goshort
       GOSHRT_CONFIG_NAME: config.dev
@@ -19,7 +19,6 @@ services:
     build:
       context: .
       dockerfile: ./docker/goshort-analytics.Dockerfile
-    container_name: goshort-analytics
     environment:
       GOSHRT_CONFIG_PATH: /etc/goshort-analytics
       GOSHRT_CONFIG_NAME: analytics.dev

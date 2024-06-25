@@ -2,6 +2,7 @@ package trace
 
 import (
 	"fmt"
+	"go.uber.org/zap"
 	"runtime"
 )
 
@@ -21,4 +22,8 @@ func WrapMsg(str string) string {
 func WrapError(err error) error {
 	_, function, line := trace()
 	return fmt.Errorf("%s:%d %w", function, line, err)
+}
+
+func AsZapError(err error) zap.Field {
+	return zap.Error(WrapError(err))
 }

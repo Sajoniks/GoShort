@@ -8,9 +8,9 @@ COPY go.mod go.sum ./
 RUN go mod download && go mod verify
 
 COPY internal internal
-COPY cmd cmd
+COPY cmd/go-short cmd
 
-RUN CGO_ENABLED=1 GOOS=linux go build -o /usr/local/bin/app ./cmd/go-short
+RUN CGO_ENABLED=1 GOOS=linux go build -o /usr/local/bin/app ./cmd
 
 FROM alpine:3.20
 COPY --from=build /usr/local/bin/app /usr/local/bin/app

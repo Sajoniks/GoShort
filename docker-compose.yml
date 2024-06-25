@@ -25,6 +25,31 @@ services:
     volumes:
       - ./config:/etc/goshort-analytics
 
+  goshort-cache:
+    image: goshort-cache
+    hostname: cache
+    build:
+      context: .
+      dockerfile: ./docker/cache.Dockerfile
+    environment:
+      GOSHRT_CONFIG_PATH: /etc/goshort-cache
+      GOSHRT_CONFIG_NAME: cache.dev
+    volumes:
+      - ./config:/etc/goshort-cache
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:7.2.5-alpine
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 512m
+        reservations:
+          cpus: "0.25"
+          memory: 256m
+
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
     hostname: zoo
@@ -32,6 +57,14 @@ services:
       ZOOKEEPER_CLIENT_PORT: 2181
 #    ports:
 #      - 2181:2181
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 512m
+        reservations:
+          cpus: "0.25"
+          memory: 256m
 
   kafka:
     image: confluentinc/cp-kafka:latest
@@ -50,6 +83,14 @@ services:
 #      KAFKA_JMX_HOSTNAME: kafka
 #    ports:
 #      - 29092:29092
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512m
+        reservations:
+          cpus: "0.25"
+          memory: 256m
 
 #  kafka-ui:
 #    container_name: kafka-ui
@@ -69,6 +110,11 @@ services:
       - kafka
       - zookeeper
     entrypoint: ["/bin/sh", "-c"]
+    deploy:
+      resources:
+        limits:
+          cpus: "0.1"
+          memory: 128m
     command: |
       "
       echo -e 'Init kafka'
@@ -80,6 +126,14 @@ services:
 
   prometheus:
     image: prom/prometheus
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512m
+        reservations:
+          cpus: "0.25"
+          memory: 256m
     ports:
       - 9090:9090
     volumes:

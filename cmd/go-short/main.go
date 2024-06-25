@@ -11,6 +11,7 @@ import (
 	"github.com/sajoniks/GoShort/internal/http-server/metrics"
 	"github.com/sajoniks/GoShort/internal/http-server/middleware"
 	"github.com/sajoniks/GoShort/internal/mq"
+	"github.com/sajoniks/GoShort/internal/store/cache"
 	"github.com/sajoniks/GoShort/internal/store/sqlite"
 	"go.uber.org/zap"
 	"log"
@@ -49,6 +50,14 @@ func main() {
 		logger.Panic("unable to load database", zap.Error(err))
 	}
 
+	storeCache, err := cache.NewCachedStore(cfg.Cache.Host, store)
+	if err != nil {
+		store.Close()
+		logger.Panic("unable to load cache", zap.Error(err))
+	}
+
+	defer storeCache.Close()
+
 	kafka := mq.NewKafkaWriterWorker(&cfg.Messaging.Kafka.Writers[0], logger)
 	httpMetrics := metrics.NewHttpMetrics(prometheus.DefaultRegisterer)
 
@@ -60,8 +69,8 @@ func main() {
 		middleware.NewRecoverer(),
 	)
 
-	servMux.Methods("POST").Path("/").Handler(save.NewSaveUrlHandler(cfg.Server.Host, store, kafka))
-	servMux.Methods("GET").Path("/{alias}").Handler(get.NewGetUrlHandler(store, kafka))
+	servMux.Methods("POST").Path("/").Handler(save.NewSaveUrlHandler(cfg.Server.Host, storeCache, kafka))
+	servMux.Methods("GET").Path("/{alias}").Handler(get.NewGetUrlHandler(storeCache, kafka))
 
 	serv := &http.Server{
 		Addr:    cfg.Server.Host,

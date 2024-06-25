@@ -11,7 +11,8 @@ import (
 
 type AppConfig struct {
 	Server    ServerConfig        `yaml:"server"`
-	Database  DbConfig            `yaml:"database"`
+	Database  DbConfig            `yaml:"database,omitempty"`
+	Cache     CacheConfig         `yaml:"cache,omitempty"`
 	Messaging MessagingConfig     `yaml:"mq,omitempty"`
 	Metrics   MetricsServerConfig `yaml:"metrics,omitempty"`
 }
@@ -31,6 +32,10 @@ type ServerConfig struct {
 
 type MessagingConfig struct {
 	Kafka KafkaMessagingConfig `yaml:"kafka,omitempty"`
+}
+
+type CacheConfig struct {
+	Host string `yaml:"host"`
 }
 
 type KafkaMessagingConfig struct {
